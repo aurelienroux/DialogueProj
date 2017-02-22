@@ -129,29 +129,29 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res, next) => {
-  // const eventType = req.body.event_type;
-  // const eventData = req.body.data;
-  // const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
-  // // Both LogicInvocation and MessageOutbound events will be sent to this handler
-  // if (eventType === 'LogicInvocation') {
-  //   // io.emit('new_patient_message', {custom: 'data'})
-  //   const initNodeClient = InitClient.create(eventData, {
-  //     succeed(result) {
-  //       console.log(JSON.stringify(result,null,4));
-  //       console.log('SENDING USERMESSAGE', userMessage)
-  //       io.emit('send_userMessage', userMessage)
-  //       console.log(eventData);
-  //       io.emit('state_change', {
-  //         newState: result.payload.conversation_state,
-  //         convId: '....'
-  //       })
-  //       sendLogicResult(eventData.payload, result)
-  //     }
-  //   });
-  //   // An instance of the client needs to be provided to the `handle` method
-  //   // exported from behavior/scripts/index.js to emulate the Lambda pattern
-  //   projectLogicScript.handle(initNodeClient);
-  // }
+  const eventType = req.body.event_type;
+  const eventData = req.body.data;
+  const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
+  // Both LogicInvocation and MessageOutbound events will be sent to this handler
+  if (eventType === 'LogicInvocation') {
+    // io.emit('new_patient_message', {custom: 'data'})
+    const initNodeClient = InitClient.create(eventData, {
+      succeed(result) {
+        console.log(JSON.stringify(result,null,4));
+        console.log('SENDING USERMESSAGE', userMessage)
+        io.emit('send_userMessage', userMessage)
+        console.log(eventData);
+        io.emit('state_change', {
+          newState: result.payload.conversation_state,
+          convId: '....'
+        })
+        sendLogicResult(eventData.payload, result)
+      }
+    });
+    // An instance of the client needs to be provided to the `handle` method
+    // exported from behavior/scripts/index.js to emulate the Lambda pattern
+    projectLogicScript.handle(initNodeClient);
+  }
   // Immediately return a 200 to acknowledge receipt of the Webhook
   res.sendStatus(200);
 })
