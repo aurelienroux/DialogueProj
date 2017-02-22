@@ -1,10 +1,11 @@
 {
-  "name": "when-bots-take-over",
+  "name": "Triage-API",
   "version": "0.0.0",
-  "description": "*movie trailler voice* IN A WORLD...WHERE BOTS ARE TAKING OVET THE GALAXY... One man..One macbook.. and a bunch of code can save the universe. THis summer, jean claude van damn is...The programmer..Directed by Stanley Kurbrick's long lost son. Rated S",
+  "description": "SPTkrwjbeinsdfjilsuhbhj,vsc",
   "main": "server.js",
   "scripts": {
-    "start": "initai-dev-server",
+    "start": "node server.js",
+    "startai": "initai-dev-server",
     "server": "node server.js",
     "server:watch": "NODE_ENV=development nodemon server.js",
     "dev": "npm-run-all --parallel start server:watch"
