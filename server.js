@@ -111,9 +111,11 @@ const server = require('http').createServer(app);
 const io = require('socket.io')(server);
 
 io.on('connection', function(socket) {
-  socket.on('nurse_message', function(data) {
-    console.log("RECEIVED NURSE MESSAGE", data)
-  });
+  socket.on('human_message', function(data) {
+    eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:human:message",{
+      message: data.message
+    })
+  })
   socket.on('form_send', function(){
     eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:QForm",{
     	needsHuman: false,
