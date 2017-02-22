@@ -114,6 +114,21 @@ io.on('connection', function(socket) {
   socket.on('nurse_message', function(data) {
     console.log("RECEIVED NURSE MESSAGE", data)
   });
+  socket.on('form_send', function(){
+    eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:QForm",{
+    	needsHuman: false,
+      quetions:[
+        {
+          ask: 'do_you_smoke',
+          accept: ['affirmative', 'decline', 'do_you_smoke_answer']
+        },
+        {
+          ask: 'any_medications',
+          accept: ['affirmative', 'decline','medication_answer']
+        }
+      ]
+    })
+  })
   //.... add any other events
 });
 
