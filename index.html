@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io('/')
+      socket.on('send_userMessage', function(data){
+        console.log(data);
+      })
+      function test(){
+        socket.emit('nurse_message', {message: "how much do you really smoke?"})
+      }
+    </script>
+  </body>
+</html>
