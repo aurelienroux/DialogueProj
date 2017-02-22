@@ -11,6 +11,9 @@
       socket.on('send_userMessage', function(data){
         console.log(data);
       })
+      socket.on('state_change', function(data){
+        console.log(data);
+      })
       function test(){
         socket.emit('nurse_message', {message: "how much do you really smoke?"})
       }

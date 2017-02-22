@@ -7,6 +7,15 @@ const axios = require('axios');
 const morgan = require('morgan');
 
 const projectLogicScript = require('./behavior/scripts/');
+/**
+*WILD WILD RENEGADE FUNCTIONS
+**/
+function isNotEvent(el){
+  if(el.sender_role === "end-user" || el.sender_role === "app"){
+    return true;
+  }
+  return false
+}
 
 /**
 * Send the result of the logic invoation to Init.ai
@@ -53,9 +62,11 @@ function eventWebhook(initUserId,eventType,dataPayload) {
       'authorization': `Bearer ${process.env.JWT_TOKEN}`,
       'content-type': 'application/json',
     },
-    "app_user_id": initUserId,
-    "event_type": eventType,
-    "data": dataPayload
+    data:{
+      app_user_id: initUserId,
+      event_type: eventType,
+      data: dataPayload
+    }
   }
 
   axios.request(requestConfig)
@@ -66,9 +77,33 @@ function eventWebhook(initUserId,eventType,dataPayload) {
     console.log('the fish never got caught, the hook must be no good');
   });
 }
+//if there is an id passed it will switch to get conv by id mode
+function getConv(convId) {
+  let convURL;
+  if(convId){
+    convURL = `https://api.init.ai/api/v1/config/${process.env.PROJECT_ID}/logs/conversations/${convId}`;
+  }else{
+    convURL = `https://api.init.ai/api/v1/config/${process.env.PROJECT_ID}/logs/conversations`;
+  }
+  const requestConfig = {
+    method: 'POST',
+    url: convURL,
+    headers: {
+      'authorization': `Bearer ${process.env.CONV_JWT_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    data:{
+      query: {
+       page_size: 100
+      }
+    }
+  };
+  return axios.request(requestConfig)
+}
 /**
 * all the outbound events
 **/
+const cors = require('cors')
 const app = express();
 
 const server = require('http').createServer(app);
@@ -82,19 +117,17 @@ io.on('connection', function(socket) {
   //.... add any other events
 });
 
+app.use(cors())
 app.use(bodyParser.json());
 app.use(morgan('dev')); // @TODO change for prod
 
 /**
  * Add a POST request handler for webhook invocations
  */
-// app.get('/', (req, res) => {
-//  res.sendStatus(200);
-// });
+app.get('/', (req, res) => {
+ res.sendStatus(200);
+});
 
-app.get('/socketTest', (req, res) => {
- res.sendFile(__dirname + '/index.html');
-})
 app.post('/', (req, res, next) => {
   const eventType = req.body.event_type;
   const eventData = req.body.data;
@@ -102,19 +135,19 @@ app.post('/', (req, res, next) => {
   // Both LogicInvocation and MessageOutbound events will be sent to this handler
   if (eventType === 'LogicInvocation') {
     // io.emit('new_patient_message', {custom: 'data'})
-
-    // The `create` factory expects and the event data and an Object modeled
-    // to match AWS Lambda's interface which exposes a `succeed` function.
-    // By default, the `done` method on the client instance will call this handler
     const initNodeClient = InitClient.create(eventData, {
       succeed(result) {
-        // console.log(userMessage);
+        console.log(JSON.stringify(result,null,4));
         console.log('SENDING USERMESSAGE', userMessage)
         io.emit('send_userMessage', userMessage)
+        console.log(eventData);
+        io.emit('state_change', {
+          newState: result.payload.conversation_state,
+          convId: '....'
+        })
         sendLogicResult(eventData.payload, result)
       }
     });
-
     // An instance of the client needs to be provided to the `handle` method
     // exported from behavior/scripts/index.js to emulate the Lambda pattern
     projectLogicScript.handle(initNodeClient);
@@ -123,19 +156,56 @@ app.post('/', (req, res, next) => {
   res.sendStatus(200);
 })
 
+app.get('/socketTest', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+})
 /**
  * Add a "heartbeat" endpoint to ensure server is up
  */
 app.get('/heartbeat', (req, res) => {
-  res.send('PONG...MOTHERFU****!!!')
+  res.send('*heartbeat sound* Boom Boom...Boom Boom... *heartbeat sound*')
+});
+//if there is an id passed it will switch to get conv by id mode
+app.get('/conv', (req, res) => {
+  const convList =
+  getConv()
+  .then( conv => {
+    const convList = conv.data.body.conversations.map(el => {
+      return {
+        convId: el.id,
+        userId: el.users[0].id
+      }
+    })
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(convList));
+  })
+  .catch(err =>{
+    console.log("there was an error while getting conversations", err, err.stack)
+    res.sendStatus(404)
+  });
 });
 
-app.get('/conversations', (req, res) => {
-
-});
-
-app.get('/conversations/:id', (req, res) => {
-  // return all the messages in a conversation
+app.get('/conv/:id', (req, res) => {
+  getConv(req.params.id)
+  .then(conv =>{
+    return conv.data.body.conversation.messages.filter(isNotEvent)
+  })
+  .then(conv => {
+    const msgList = conv.map(el => {
+      return {
+        id: el.id,
+        sender: el.sender,
+        createdAt: el.created_at,
+        messageContent: el.parts[0].content
+      }
+    })
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(msgList));
+  })
+  .catch(err =>{
+    console.log("there was an error while getting conversations", err, err.stack)
+    res.sendStatus(404)
+  });
 })
 
 const PORT = process.env.PORT || 8888;
@@ -166,9 +236,7 @@ server.listen(PORT, () => {
 //
 //
 //
-// function isNotEvent(conversationPart) {
-//   return conversationPart.type !== 'event';
-// }
+
 //
 // function makeIntoNiceConversation(conversationPart) {
 //   return {
@@ -176,6 +244,3 @@ server.listen(PORT, () => {
 //   }
 // }
 //
-// conversationParts
-// .filter(isNotEvent)
-// .map(makeIntoNiceConversation)
