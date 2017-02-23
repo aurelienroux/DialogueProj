@@ -158,38 +158,38 @@ app.route('/')
   .get((req, res) => {
     res.sendStatus(200);
   })
-  // .post((req,res) => {
-  //   res.sendStatus(200)
-  // })
-  .post((req, res, next) => {
-    const eventType = req.body.event_type;
-    const eventData = req.body.data;
-    console.log(JSON.stringify(eventData.payload,null,4));
-    const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
-    const userId = eventData.payload.current_conversation.__private_temp_user_id
-    // Logic invocation
-    // console.log(req.body);
-    if (eventType === 'LogicInvocation') {
-      // io.emit('new_patient_message', {custom: 'data'})
-      const initNodeClient = InitClient.create(eventData, {
-        succeed(result) {
-          // console.log(JSON.stringify(result,null,4));
-          console.log('SENDING USERMESSAGE', userMessage)
-          io.emit('transmit_user_message', {
-            message: userMessage,
-            userId: userId
-          })
-          io.emit('transmit_state', {
-            newState: result.payload.conversation_state,
-            userId: userId
-          })
-          sendLogicResult(eventData.payload, result)
-        }
-      })
-      projectLogicScript.handle(initNodeClient);
-    }
+  .post((req,res) => {
     res.sendStatus(200);
   })
+  // .post((req, res, next) => {
+  //   const eventType = req.body.event_type;
+  //   const eventData = req.body.data;
+  //   console.log(JSON.stringify(eventData.payload,null,4));
+  //   const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
+  //   const userId = eventData.payload.current_conversation.__private_temp_user_id
+  //   // Logic invocation
+  //   // console.log(req.body);
+  //   if (eventType === 'LogicInvocation') {
+  //     // io.emit('new_patient_message', {custom: 'data'})
+  //     const initNodeClient = InitClient.create(eventData, {
+  //       succeed(result) {
+  //         // console.log(JSON.stringify(result,null,4));
+  //         console.log('SENDING USERMESSAGE', userMessage)
+  //         io.emit('transmit_user_message', {
+  //           message: userMessage,
+  //           userId: userId
+  //         })
+  //         io.emit('transmit_state', {
+  //           newState: result.payload.conversation_state,
+  //           userId: userId
+  //         })
+  //         sendLogicResult(eventData.payload, result)
+  //       }
+  //     })
+  //     projectLogicScript.handle(initNodeClient);
+  //   }
+  //   res.sendStatus(200);
+  // })
 
 //boom boom, this is a heartbeat to check if the server is alive
 app.get('/heartbeat', (req, res) => {
