@@ -37,7 +37,6 @@ exports.handle = (client) => {
       console.log ('should wait: ', shouldWaitForNurse(client.getConversationState()));
       return !shouldWaitForNurse(client.getConversationState());
     },
-
     prompt() {
       requireHuman();
     }

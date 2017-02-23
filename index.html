@@ -8,14 +8,14 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io('/')
-      socket.on('send_userMessage', function(data){
+      socket.on('transmit_user_message', function(data){
         console.log(data);
       })
-      socket.on('state_change', function(data){
-        console.log(data);
-      })
+      // socket.on('state_change', function(data){
+      //   console.log(data);
+      // })
       function test(){
-        socket.emit('nurse_message', {message: "how much do you really smoke?"})
+        socket.emit('send_human_message', {message: "what kind of kush will you be having today???"})
       }
     </script>
   </body>
