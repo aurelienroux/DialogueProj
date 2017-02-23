@@ -158,38 +158,52 @@ app.route('/')
   .get((req, res) => {
     res.sendStatus(200);
   })
-  .post((req,res) => {
+  .post((req, res, next) => {
+    if(process.env.WEBHOOK_THING == 1){
+      res.sendStatus(200);
+    }
+    const eventType = req.body.event_type;
+    const eventData = req.body.data;
+    console.log(JSON.stringify(eventData,null,4));
+    const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
+    const userId = eventData.payload.current_conversation.__private_temp_user_id
+    const sender = eventData.payload.current_conversation.messages[0].sender_role
+    const createdAt = eventData.payload.invocation_data.initiated_at
+    // Logic invocation
+    // console.log(req.body);
+    if (eventType === 'LogicInvocation') {
+      // io.emit('new_patient_message', {custom: 'data'})
+      const initNodeClient = InitClient.create(eventData, {
+        succeed(result) {
+          // console.log(JSON.stringify(result,null,4));
+          console.log('SENDING USERMESSAGE', userMessage)
+          io.emit('transmit_message', {
+            userId: userId,
+            convId: 'lol',
+            sender: sender,
+            createdAt: createdAt,
+            messageContent: userMessage
+          })
+          io.emit('transmit_state', {
+            newState: result.payload.conversation_state,
+            userId: userId,
+            convId: 'lol'
+          })
+          sendLogicResult(eventData.payload, result)
+        }
+      })
+      projectLogicScript.handle(initNodeClient);
+    }else if(eventType === 'MessageOutbound'){
+      io.emit('transmit_message', {
+        userId: userId,
+        convId: 'lol',
+        sender: sender,
+        createdAt: createdAt,
+        messageContent: userMessage
+      })
+    }
     res.sendStatus(200);
   })
-  // .post((req, res, next) => {
-  //   const eventType = req.body.event_type;
-  //   const eventData = req.body.data;
-  //   console.log(JSON.stringify(eventData.payload,null,4));
-  //   const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
-  //   const userId = eventData.payload.current_conversation.__private_temp_user_id
-  //   // Logic invocation
-  //   // console.log(req.body);
-  //   if (eventType === 'LogicInvocation') {
-  //     // io.emit('new_patient_message', {custom: 'data'})
-  //     const initNodeClient = InitClient.create(eventData, {
-  //       succeed(result) {
-  //         // console.log(JSON.stringify(result,null,4));
-  //         console.log('SENDING USERMESSAGE', userMessage)
-  //         io.emit('transmit_user_message', {
-  //           message: userMessage,
-  //           userId: userId
-  //         })
-  //         io.emit('transmit_state', {
-  //           newState: result.payload.conversation_state,
-  //           userId: userId
-  //         })
-  //         sendLogicResult(eventData.payload, result)
-  //       }
-  //     })
-  //     projectLogicScript.handle(initNodeClient);
-  //   }
-  //   res.sendStatus(200);
-  // })
 
 //boom boom, this is a heartbeat to check if the server is alive
 app.get('/heartbeat', (req, res) => {
@@ -224,7 +238,7 @@ app.get('/conv/:id', (req, res) => {
   .then(conv => {
     const msgList = conv.map(el => {
       return {
-        id: el.id,
+        convId: el.id,
         sender: el.sender,
         createdAt: el.created_at,
         messageContent: el.parts[0].content
