@@ -149,7 +149,7 @@ io.on('connection', function(socket) {
 //All of the middle of the ware
 app.use(cors())
 app.use(bodyParser.json());
-app.use(morgan(process.env.MORGAN)); // change for prod when in progue
+app.use(morgan('dev'));
 //end of the middle of the ware
 
 
@@ -159,31 +159,35 @@ app.route('/')
     res.sendStatus(200);
   })
   .post((req, res, next) => {
-    if(process.env.WEBHOOK_THING == 1){
-      res.sendStatus(200);
-    }
     const eventType = req.body.event_type;
     const eventData = req.body.data;
-    console.log(JSON.stringify(eventData,null,4));
+    console.log('EVENT DATA RECEIVED:\n%s', JSON.stringify(req.body,null,4));
+
+    if (!eventData) {
+      res.sendStatus(200);
+      return;
+    }
     const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
-    const userId = eventData.payload.current_conversation.__private_temp_user_id
-    const sender = eventData.payload.current_conversation.messages[0].sender_role
-    const createdAt = eventData.payload.invocation_data.initiated_at
+    const userId = eventData.payload.current_conversation.__private_temp_user_id; // deprecated
+    const sender = eventData.payload.current_conversation.messages[0].sender_role;
+    const createdAt = eventData.payload.invocation_data.initiated_at;
     // Logic invocation
     // console.log(req.body);
     if (eventType === 'LogicInvocation') {
-      // io.emit('new_patient_message', {custom: 'data'})
+
+      // TODO: check if this LogicInvocation is for a user message
+      io.emit('transmit_message', {
+        userId: userId,
+        convId: 'lol',
+        sender: sender,
+        createdAt: createdAt,
+        messageContent: userMessage
+      })
+
       const initNodeClient = InitClient.create(eventData, {
         succeed(result) {
           // console.log(JSON.stringify(result,null,4));
           console.log('SENDING USERMESSAGE', userMessage)
-          io.emit('transmit_message', {
-            userId: userId,
-            convId: 'lol',
-            sender: sender,
-            createdAt: createdAt,
-            messageContent: userMessage
-          })
           io.emit('transmit_state', {
             newState: result.payload.conversation_state,
             userId: userId,
@@ -193,7 +197,8 @@ app.route('/')
         }
       })
       projectLogicScript.handle(initNodeClient);
-    }else if(eventType === 'MessageOutbound'){
+    }
+    else if(eventType === 'MessageOutbound'){
       io.emit('transmit_message', {
         userId: userId,
         convId: 'lol',
@@ -207,74 +212,55 @@ app.route('/')
 
 //boom boom, this is a heartbeat to check if the server is alive
 app.get('/heartbeat', (req, res) => {
-  res.send('*heartbeat sound* Boom Boom...Boom Boom... *heartbeat sound*')
+  res.send('OK')
 });
 
 //CONVERSATION API
-app.get('/conv', (req, res) => {
-  const convList =
-  getConv()
-  .then( conv => {
-    const convList = conv.data.body.conversations.map(el => {
-      return {
-        convId: el.id,
-        userId: el.users[0].id
-      }
-    })
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(convList));
-  })
-  .catch(err =>{
-    console.log("there was an error while getting conversations", err, err.stack)
-    res.sendStatus(404)
-  });
-});
+// app.get('/conv', (req, res) => {
+//   const convList =
+//   getConv()
+//   .then( conv => {
+//     const convList = conv.data.body.conversations.map(el => {
+//       return {
+//         convId: el.id,
+//         userId: el.users[0].id
+//       }
+//     })
+//     res.setHeader('Content-Type', 'application/json');
+//     res.send(JSON.stringify(convList));
+//   })
+//   .catch(err =>{
+//     console.log("there was an error while getting conversations", err, err.stack)
+//     res.sendStatus(404)
+//   });
+// });
 //conv that takes an id and returns the messages for that id
-app.get('/conv/:id', (req, res) => {
-  getConv(req.params.id)
-  .then(conv =>{
-    return conv.data.body.conversation.messages.filter(isNotEvent)
-  })
-  .then(conv => {
-    const msgList = conv.map(el => {
-      return {
-        convId: el.id,
-        sender: el.sender,
-        createdAt: el.created_at,
-        messageContent: el.parts[0].content
-      }
-    })
-    res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify(msgList));
-  })
-  .catch(err =>{
-    console.log("there was an error while getting conversations", err, err.stack)
-    res.sendStatus(404)
-  });
-})
+// app.get('/conv/:id', (req, res) => {
+//   getConv(req.params.id)
+//   .then(conv =>{
+//     return conv.data.body.conversation.messages.filter(isNotEvent)
+//   })
+//   .then(conv => {
+//     const msgList = conv.map(el => {
+//       return {
+//         convId: el.id,
+//         sender: el.sender,
+//         createdAt: el.created_at,
+//         messageContent: el.parts[0].content
+//       }
+//     })
+//     res.setHeader('Content-Type', 'application/json');
+//     res.send(JSON.stringify(msgList));
+//   })
+//   .catch(err =>{
+//     console.log("there was an error while getting conversations", err, err.stack)
+//     res.sendStatus(404)
+//   });
+// })
 //end
 //conversation API
-
-//socket test...not needed for the rest but just for the test
-app.get('/socketTest', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-})
 
 //port handler thing part
 const PORT = process.env.PORT || 8888;
 server.listen(PORT, () => {
-  if (process.env.NODE_ENV === 'development') { //added s because i dont like this tunnel things ITS BROKENEDETED
-    console.log(`http://localhost:${PORT}/`);
-    const localtunnel = require('localtunnel');
-    const tunnel = localtunnel(PORT, {subdomain: 'raid55'}, (err, tunnel) => {
-      if (err) {
-        console.log('Localtunnel failure', err);
-      }
-      else {
-        console.log('Localtunnel listening at %s', tunnel.url);
-      }
-    });
-    tunnel.on('error', err => console.log('Localtunnel error\n\n%s', err));
-    tunnel.on('close', () => console.log('Localtunnel closed'));
-  }
 });
