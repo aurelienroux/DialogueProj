@@ -111,15 +111,15 @@ const io = require('socket.io')(server);
 io.on('connection', function(socket) {
   //this sends a message with info from the react web app...same for now its preset but scalable
   socket.on('send_human_message', function(data) {
-    eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:human:message",{
+    eventWebhook(data.user_id,"incoming:human:message",{
       message: data.message
     })
   })
   //this sends the form... for now it only sends on to one specific id but its ready for an upgrade anytime
-  socket.on('send_form', function(){
-    eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:QForm",{
-    	needsHuman: false,
-      quetions:[
+  socket.on('send_form', function(data){
+    eventWebhook(data.user_id,"incoming:QForm",{
+      needsHuman: false,
+      questions:[
         {
           ask: 'do_you_smoke',
           accept: ['affirmative', 'decline', 'do_you_smoke_answer']
@@ -167,31 +167,31 @@ app.route('/')
       res.sendStatus(200);
       return;
     }
-    const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
-    const userId = eventData.payload.current_conversation.__private_temp_user_id; // deprecated
-    const sender = eventData.payload.current_conversation.messages[0].sender_role;
-    const createdAt = eventData.payload.invocation_data.initiated_at;
     // Logic invocation
     // console.log(req.body);
     if (eventType === 'LogicInvocation') {
+      const userMessage = eventData.payload.current_conversation.messages[0].parts[0].content;
+      const userId = eventData.payload.current_conversation.__private_temp_user_id; // deprecated
+      const sender = eventData.payload.current_conversation.messages[0].sender_role;
+      const createdAt = eventData.payload.invocation_data.initiated_at;
 
       // TODO: check if this LogicInvocation is for a user message
-      io.emit('transmit_message', {
-        userId: userId,
-        convId: 'lol',
-        sender: sender,
-        createdAt: createdAt,
-        messageContent: userMessage
-      })
+      if (!userMessage.event_type) {
+        io.emit('transmit_message', {
+          user_id: userId,
+          sender: sender,
+          time: createdAt,
+          message: userMessage
+        })
+      }
 
       const initNodeClient = InitClient.create(eventData, {
         succeed(result) {
           // console.log(JSON.stringify(result,null,4));
           console.log('SENDING USERMESSAGE', userMessage)
           io.emit('transmit_state', {
-            newState: result.payload.conversation_state,
-            userId: userId,
-            convId: 'lol'
+            state: result.payload.conversation_state,
+            user_id: userId
           })
           sendLogicResult(eventData.payload, result)
         }
@@ -199,12 +199,15 @@ app.route('/')
       projectLogicScript.handle(initNodeClient);
     }
     else if(eventType === 'MessageOutbound'){
+      let userId = req.body.app_user.id;
+      let sender = "app";
+      let createdAt = req.body.data.created_at;
+      let userMessage = req.body.data.content;
       io.emit('transmit_message', {
-        userId: userId,
-        convId: 'lol',
+        user_id: userId,
         sender: sender,
-        createdAt: createdAt,
-        messageContent: userMessage
+        time: createdAt,
+        message: userMessage
       })
     }
     res.sendStatus(200);

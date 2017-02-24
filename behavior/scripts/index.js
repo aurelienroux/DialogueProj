@@ -53,15 +53,7 @@ exports.handle = (client) => {
     prompt() {
       const questions = client.getConversationState().questions;
       const messagePart = client.getMessagePart();
-      const confidence = messagePart.confidence;
 
-      // If confidence is too low, signal the nurse
-      if (confidence < MIN_CONFIDENCE) {
-        console.log('too low conf', confidence, MIN_CONFIDENCE);
-        requireHuman();
-        return;
-      }
-      console.log(questions.find(q => q.isAsking));
       const currentQuestion = questions.find(q => q.isAsking);
       const humanRes = client.getConversationState().humanResponse;
 
@@ -115,9 +107,10 @@ exports.handle = (client) => {
   }
 
   const handleQFormIncoming = function (eventType, payload) {
-    client.updateConversationState({questions: payload.quetions,needsHuman: payload.needsHuman})
+    client.updateConversationState({questions: payload.questions,needsHuman: payload.needsHuman})
     console.log('form sent to user');
-    client.addTextResponse('I just sent you a form to fill out, is that ok?')
+    //client.addTextResponse('Say anything to start the questions');
+    askQuestions.prompt();
     client.done();
   }
 
