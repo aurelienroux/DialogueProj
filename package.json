@@ -1,7 +1,7 @@
 {
-  "name": "Triage-API",
-  "version": "0.0.0",
-  "description": "SPTkrwjbeinsdfjilsuhbhj,vsc",
+  "name": "DialogueProj",
+  "version": "1.0.0",
+  "description": "Dialogue Bot Project",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,13 +10,12 @@
     "server:watch": "NODE_ENV=development nodemon server.js",
     "dev": "npm-run-all --parallel start server:watch"
   },
-  "author": "Raid55 <boutboulnicholas@gmail.com>",
-  "license": "tha best license",
+  "author": "Dialogue + Aurelien Roux",
+  "license": "ISC",
   "dependencies": {
     "axios": "^0.15.3",
     "body-parser": "^1.16.1",
     "cors": "^2.8.1",
-    "dotenv": "^4.0.0",
     "express": "^4.14.1",
     "initai-dev-server": "^0.4.8",
     "initai-node": "~0.0.7",
@@ -25,7 +24,7 @@
     "socket.io": "^1.7.3"
   },
   "devDependencies": {
-    "localtunnel": "^1.8.2",
+    "dotenv": "^4.0.0",
     "nodemon": "^1.11.0",
     "npm-run-all": "^4.0.1"
   }
