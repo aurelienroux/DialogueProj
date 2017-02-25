@@ -132,7 +132,7 @@ io.on('connection', function(socket) {
     })
   })
   socket.on('send_human_response', function(data){
-    eventWebhook("0046b452-036f-4dd6-5f24-a39bc77436f9","incoming:human:response",{
+    eventWebhook(data.user_id,"incoming:human:response",{
       needsHuman: false,
       humanResponse: {
         text: data.response,
