@@ -114,6 +114,7 @@ io.on('connection', function(socket) {
     eventWebhook(data.user_id,"incoming:human:message",{
       message: data.message
     })
+    console.log("testing send humna message")
   })
   //this sends the form... for now it only sends on to one specific id but its ready for an upgrade anytime
   socket.on('send_form', function(data){
