@@ -114,7 +114,6 @@ io.on('connection', function(socket) {
     eventWebhook(data.user_id,"incoming:human:message",{
       message: data.message
     })
-    console.log("testing send humna message")
   })
   //this sends the form... for now it only sends on to one specific id but its ready for an upgrade anytime
   socket.on('send_form', function(data){
@@ -122,10 +121,12 @@ io.on('connection', function(socket) {
       needsHuman: false,
       questions:[
         {
+          askFriendly: 'Do you smoke?',
           ask: 'do_you_smoke',
           accept: ['affirmative', 'decline', 'do_you_smoke_answer']
         },
         {
+          askFriendly: 'Do you take any medications?',
           ask: 'any_medications',
           accept: ['affirmative', 'decline','medication_answer']
         }
@@ -134,11 +135,7 @@ io.on('connection', function(socket) {
   })
   socket.on('send_human_response', function(data){
     eventWebhook(data.user_id,"incoming:human:response",{
-      needsHuman: false,
-      humanResponse: {
-        text: data.response,
-      	baseType: data.baseType
-      }
+      text: data.text
     })
   })
   //.... add any other events

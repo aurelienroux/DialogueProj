@@ -125,14 +125,16 @@ exports.handle = (client) => {
     client.done()
   }
   const humanResponse = function (eventType, payload) {
-    client.updateConversationState({
-      needsHuman: payload.needsHuman,
-      humanResponse: {
-        text: payload.humanResponse.text,
-        baseType: payload.humanResponse.baseType
-      }
-    })
-    console.log('A human response was submited');
+    const questions = client.getConversationState().questions;
+    const currentQuestion = questions.find(q => q.isAsking);
+
+    if (currentQuestion) {
+      currentQuestion.isAsking = false;
+      currentQuestion.answer = payload.text;
+    }
+
+    client.updateConversationState({needsHuman: false, questions: questions});
+
     askQuestions.prompt()
   }
 
