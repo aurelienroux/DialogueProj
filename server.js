@@ -136,7 +136,7 @@ io.on('connection', function(socket) {
           accept: ['affirmative', 'decline', 'allergies_answer']
         },
         {
-          askFriendly: 'Do you have an insurance?',
+          askFriendly: 'Do you have insurance?',
           ask: 'any_insurance',
           accept: ['affirmative', 'decline','insurance_answer']
         },
