@@ -132,7 +132,7 @@ io.on('connection', function(socket) {
         },
         {
           askFriendly: 'Do you have any allergies?',
-          ask: 'do_you_have_allergies',
+          ask: 'any_allergies',
           accept: ['affirmative', 'decline', 'allergies_answer']
         },
         {
