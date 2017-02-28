@@ -142,7 +142,7 @@ io.on('connection', function(socket) {
         },
         {
           askFriendly: 'Do you live in Montreal?',
-          ask: 'where_do_you_live',
+          ask: 'in_what_city',
           accept: ['affirmative', 'decline','city_answer']
         }
 
