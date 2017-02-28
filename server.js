@@ -129,7 +129,23 @@ io.on('connection', function(socket) {
           askFriendly: 'Do you take any medications?',
           ask: 'any_medications',
           accept: ['affirmative', 'decline','medication_answer']
+        },
+        {
+          askFriendly: 'Do you have any allergies?',
+          ask: 'do_you_have_allergies',
+          accept: ['affirmative', 'decline', 'allergies_answer']
+        },
+        {
+          askFriendly: 'Do you have an insurance?',
+          ask: 'any_insurance',
+          accept: ['affirmative', 'decline','insurance_answer']
+        },
+        {
+          askFriendly: 'Do you live in Montreal?',
+          ask: 'where_do_you_live',
+          accept: ['affirmative', 'decline','city_answer']
         }
+
       ]
     })
   })
