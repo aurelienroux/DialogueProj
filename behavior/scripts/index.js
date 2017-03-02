@@ -138,6 +138,16 @@ exports.handle = (client) => {
     askQuestions.prompt()
   }
 
+  const reset = client.createStep({
+    satisfied() {
+      return false;
+    }
+    prompt() {
+      client.resetConversationState();
+      client.done();
+    }
+  })
+
   client.runFlow({
     eventHandlers: {
       '*': handleRenegadeEvent,
@@ -147,11 +157,12 @@ exports.handle = (client) => {
       'toggleState:needHuman': toggleNeedHuman,
     },
     classifications: {
-      // map inbound message classifications to names of streams
+      'reset/reset': 'reset'
     },
     streams: {
       main: 'loop',
-      loop: [waitForNurse, askQuestions]
+      loop: [waitForNurse, askQuestions],
+      reset: [reset]
     },
   })
 }
