@@ -1,3 +1,3 @@
-# when-bots-take-over
+# Dialogue Proj
 
-they will eventually take over...
+Backend code for Dialogue Nursebot application
