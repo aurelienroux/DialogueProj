@@ -141,7 +141,7 @@ exports.handle = (client) => {
   const reset = client.createStep({
     satisfied() {
       return false;
-    }
+    },
     prompt() {
       client.resetConversationState();
       client.done();
